@@ -29,15 +29,28 @@ with GestureRecognizer.create_from_options(options) as recognizer:
     # The detector is initialized. Use it here.
     # ...
     
-    # Preparing Data Below
+    # Open CV2 to capture video from the webcam
     cap = cv2.VideoCapture(0)
     
+    # Validation to check if the webcam is opened successfully
     if not cap.isOpened():
         print("Error: Could not open webcam.")
     else:
         print("Success: WebCam opened.")
+        
+
+    # Create a loop to read the latest frame from the webcame and process it using the gesture
     
     
     # convert the frame recieved from OpenCV to a MediaPipe's Image object.
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=numpy_frame_from_opencv)
-    recognize
+    recognizer.recognize_async(mp_image, timestamp_ms)
+
+    # Send live image dat to perform gesture recognition 
+    
+    # The Results will be access by a call back function defined in the options when creating the recognizer. The callback will be called every time the recognizer has a new result available. The callback will receive the result, the image that was processed, and the timestamp of when the image was processed.
+    
+    
+
+
+
