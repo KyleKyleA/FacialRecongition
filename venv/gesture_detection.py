@@ -1,56 +1,65 @@
 # Starter Code for Gesture Detection using MediaPipe and OpenCV from Google MediaPipe's documentation: https://developers.google.com/mediapipe/solutions/vision/gesture_recognizer/python
+# Youtube Video's tutorials and etc.
+# looking forward to learning and implementing something unique as I dive into a bit of machine learning and AI in this GITHUB repository.
 # IMPORTS
+import time
 import mediapipe as mp 
 from mediapipe.tasks import python 
-from mediapipe.tasks.python import vision 
-import cv2
+import cv2 
+from pathlib import Path 
+from typing import List, Tuple, Optional
 
 # MODEL PATH
-model_path = './gesture_recognizer.task'
-
-base_options = BaseOptions(model_asset_path=model_path)
+current_dir = Path(__file__).parent
+model_path = current_dir / "gesture_recognizer.task"
 
 BaseOptions = mp.tasks.BaseOptions
 GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
 GestureRecognizer = mp.tasks.vision.GestureRecognizer
-GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
+Image = mp.Image
 
-# CREATE THE GESTURE RECOGNIZER
-def print_results(result: GestureRecognizerResult, output_image : mp.image, timestamp_ms: int):
-    print('gesture recognition results: {}'.format(result.gestures))
+
+_latest_gesture: Optional[str] = None
+
+_latest_landmarks_norm: Optional[List[Tuple[float, float, float]]] = None
+
+
+HAND_CONNECTIONS = [
+    (0,1), (1,2), (2,3), (3,4) #THUMB
+    (0,5), (5,6), (6,7), (7,8) #INDEX
+    (0,9), (9,10), (10,11), (11,12) #MIDDLE
+    (0,13), (13,14), (14,15), (15,16) #RING
+    (0,17), (17,18), (18,19), (19,20) #PINKY
+    
+]
+
+# Function to draw landmarks and connections on the persons hand
+def print_result(result, output_image, timestamp_ms: int):
+    """ Callback function to print results from the gesture recognizer. """
     
 
-options = GestureRecognizerOptions(
-    base_options=BaseOptions(model_asset_path='/path/to/model.task'),
-    running_mode=VisionRunningMode.LIVE_STREAM,
-    result_callback=print_results)
-with GestureRecognizer.create_from_options(options) as recognizer:
-    # The detector is initialized. Use it here.
-    # ...
-    
-    # Open CV2 to capture video from the webcam
-    cap = cv2.VideoCapture(0)
-    
-    # Validation to check if the webcam is opened successfully
-    if not cap.isOpened():
-        print("Error: Could not open webcam.")
-    else:
-        print("Success: WebCam opened.")
+
+
+# Running the Gesture Recognizer in video mode with OpenCV 
+    def main():
+        options = GestureRecognizerOptions(
+            base_options=BaseOptions(model_asset_path=str(model_path)),
+            running_mode=VisionRunningMode.VIDEO,
+            result_callback=print_result)
         
+        
+        # Create the object 
+        with GestureRecognizer.create_from_options(options) as recognizer:
 
-    # Create a loop to read the latest frame from the webcame and process it using the gesture
-    
-    
-    # convert the frame recieved from OpenCV to a MediaPipe's Image object.
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=numpy_frame_from_opencv)
-    recognizer.recognize_async(mp_image, timestamp_ms)
 
-    # Send live image dat to perform gesture recognition 
-    
-    # The Results will be access by a call back function defined in the options when creating the recognizer. The callback will be called every time the recognizer has a new result available. The callback will receive the result, the image that was processed, and the timestamp of when the image was processed.
-    
-    
 
+        # Open the webcam and start processing video frames
+        # Validation
+            cam = cv2.VideoCapture(0)
+        if not cam.isOpened():
+           print("Error: Could not open webcam.")
+           return 
+    
 
 
