@@ -78,12 +78,15 @@ with mp_hands.Hands(
         fps = 1 / (current_time - prev_time)
         prev_time = current_time
         
-        cv2.putText(image, time.strftime('%Y-%m-%d'), (10, 30), cv2.ARIAL, 1, (255, 0, 0), 2)
-        cv2.putText(image, f'FPS: {int(fps)}', (10, 70), cv2.FONT_ITALIC, 3, (255, 0, 0), 3)
+        # Text on the application 
+        cv2.putText(image, time.strftime('%Y-%m-%d'), (10, 30), cv2.FONT_ITALIC, 1, (255, 0, 0), 2)
+        cv2.putText(image, f'FPS: {int(fps)}', (10, 70), cv2.FONT_ITALIC, 1, (255, 0, 0), 3)
         
-        
-        cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
+        # Show Hands 
+        cv2.imshow('MediaPipe Hands', image)
         if cv2.waitKey(5) & 0xFF == 27:
             break
+
+# Running application
 cap.release()
 cv2.destroyAllWindows()
