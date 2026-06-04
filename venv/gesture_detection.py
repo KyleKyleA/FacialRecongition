@@ -5,6 +5,7 @@
 import cv2
 import mediapipe as mp
 import time
+import psutil
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
@@ -48,6 +49,8 @@ with mp_hands.Hands(
 # WEB CAM
 cap = cv2.VideoCapture(0)
 prev_time = 0
+WIDTH = 640
+HEIGHT = 480
 
 
 with mp_hands.Hands(
@@ -59,8 +62,12 @@ with mp_hands.Hands(
         if not success:
             print("Ignoring empty camera frame.")
             continue
+        
+        resized_image = cv2.resize(image, (WIDTH, HEIGHT))
+        
+        
         image.flags.writeable = False
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(resized_image, cv2.COLOR_BGR2RGB)
         results = hands.process(image)
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -78,14 +85,29 @@ with mp_hands.Hands(
         fps = 1 / (current_time - prev_time)
         prev_time = current_time
         
+        
         # Text on the application 
         cv2.putText(image, time.strftime('%Y-%m-%d'), (10, 30), cv2.FONT_ITALIC, 1, (255, 0, 0), 2)
         cv2.putText(image, f'FPS: {int(fps)}', (10, 70), cv2.FONT_ITALIC, 1, (255, 0, 0), 3)
+        
+        # Displaying CPU and Memory Usage on the video feed
+        cpu_pct = psutil.cpu_percent()
+
+        # RAM
+        ram = psutil.virtual_memory()
+        ram_pct = ram.percent
+        ram_used_in_gb = round(ram.used / (1024 ** 3), 2)
+
+        cv2.putText(image, f'CPU: {cpu_pct}%', (10, 110), cv2.FONT_ITALIC, 1, (255, 0, 0), 3)
+        cv2.putText(image, f'RAM: {ram_pct}% ({ram_used_in_gb} GB)', (10, 150), cv2.FONT_ITALIC, 1, (255, 0, 0), 3)
+
         
         # Show Hands 
         cv2.imshow('MediaPipe Hands', image)
         if cv2.waitKey(5) & 0xFF == 27:
             break
+        
+
 
 # Running application
 cap.release()
