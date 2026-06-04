@@ -49,6 +49,8 @@ with mp_hands.Hands(
 # WEB CAM
 cap = cv2.VideoCapture(0)
 prev_time = 0
+
+# Setting width and height for mediapipe 
 WIDTH = 640
 HEIGHT = 480
 
@@ -98,6 +100,7 @@ with mp_hands.Hands(
         ram_pct = ram.percent
         ram_used_in_gb = round(ram.used / (1024 ** 3), 2)
 
+        # Text on the application for ram and cpu usage 
         cv2.putText(image, f'CPU: {cpu_pct}%', (10, 110), cv2.FONT_ITALIC, 1, (255, 0, 0), 3)
         cv2.putText(image, f'RAM: {ram_pct}% ({ram_used_in_gb} GB)', (10, 150), cv2.FONT_ITALIC, 1, (255, 0, 0), 3)
 
