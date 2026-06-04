@@ -4,6 +4,7 @@
 # IMPORTS
 import cv2
 import mediapipe as mp
+import time
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
@@ -46,6 +47,9 @@ with mp_hands.Hands(
 
 # WEB CAM
 cap = cv2.VideoCapture(0)
+prev_time = 0
+
+
 with mp_hands.Hands(
     model_complexity=0,
     min_detection_confidence=0.5,
@@ -68,7 +72,17 @@ with mp_hands.Hands(
                     mp_hands.HAND_CONNECTIONS,
                     mp_drawing_styles.get_default_hand_landmarks_style(),
                     mp_drawing_styles.get_default_hand_connections_style())
+
+        # Displaying fps and current time on the video feed 
+        current_time = time.time()
+        fps = 1 / (current_time - prev_time)
+        prev_time = current_time
+        
+        cv2.putText(image, f'FPS: {int(fps)}', (10, 70), cv2.FONT_ITALIC, 3, (255, 0, 0), 3)
+        
+        
         cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
         if cv2.waitKey(5) & 0xFF == 27:
             break
 cap.release()
+cv2.destroyAllWindows()
