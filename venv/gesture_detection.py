@@ -2,64 +2,73 @@
 # Youtube Video's tutorials and etc.
 # looking forward to learning and implementing something unique as I dive into a bit of machine learning and AI in this GITHUB repository.
 # IMPORTS
-import time
-import mediapipe as mp 
-from mediapipe.tasks import python 
-import cv2 
-from pathlib import Path 
-from typing import List, Tuple, Optional
+import cv2
+import mediapipe as mp
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
+mp_hands = mp.solutions.hands
 
-# MODEL PATH
-current_dir = Path(__file__).parent
-model_path = current_dir / "gesture_recognizer.task"
+# for static images
+IMAGE_FILES = []
 
-BaseOptions = mp.tasks.BaseOptions
-GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
-GestureRecognizer = mp.tasks.vision.GestureRecognizer
-VisionRunningMode = mp.tasks.vision.RunningMode
-Image = mp.Image
+with mp_hands.Hands(
+    static_image_mode=True,
+    max_num_hands=2,
+    min_detection_confidence=0.5) as hands:
 
+    for idx, file in enumerate(IMAGE_FILES):
+        image = cv2.flip(cv2.imread(file), 1)
+        results = hands.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        print('handedness:', results.multi_handedness)
+        if not results.multi_hand_landmarks:
+            continue
+        image_height, image_width, _ = image.shape
+        annotated_image = image.copy()
+        for hand_landmarks in results.multi_hand_landmarks:
+            print('hand_landmarks:', hand_landmarks)
+            print(
+                f'index finger tip coordinates: ('
+                f'{hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x * image_width}, '
+                f'{hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y * image_height})'
+            )
+            mp_drawing.draw_landmarks(
+                annotated_image,
+                hand_landmarks,
+                mp_hands.HAND_CONNECTIONS,
+                mp_drawing_styles.get_default_hand_landmarks_style(),
+                mp_drawing_styles.get_default_hand_connections_style())
+            cv2.imwrite('/tmp/annotated_image' + str(idx) + '.png', annotated_image)
+        if not results.multi_hand_world_landmarks:
+            continue
+        for hand_world_landmarks in results.multi_hand_world_landmarks:
+            mp_drawing.plot_landmarks(
+                hand_world_landmarks, mp_hands.HAND_CONNECTIONS, azimuth=5)
 
-_latest_gesture: Optional[str] = None
-
-_latest_landmarks_norm: Optional[List[Tuple[float, float, float]]] = None
-
-
-HAND_CONNECTIONS = [
-    (0,1), (1,2), (2,3), (3,4) #THUMB
-    (0,5), (5,6), (6,7), (7,8) #INDEX
-    (0,9), (9,10), (10,11), (11,12) #MIDDLE
-    (0,13), (13,14), (14,15), (15,16) #RING
-    (0,17), (17,18), (18,19), (19,20) #PINKY
-    
-]
-
-# Function to draw landmarks and connections on the persons hand
-def print_result(result, output_image, timestamp_ms: int):
-    """ Callback function to print results from the gesture recognizer. """
-    
-
-
-
-# Running the Gesture Recognizer in video mode with OpenCV 
-    def main():
-        options = GestureRecognizerOptions(
-            base_options=BaseOptions(model_asset_path=str(model_path)),
-            running_mode=VisionRunningMode.VIDEO,
-            result_callback=print_result)
-        
-        
-        # Create the object 
-        with GestureRecognizer.create_from_options(options) as recognizer:
-
-
-
-        # Open the webcam and start processing video frames
-        # Validation
-            cam = cv2.VideoCapture(0)
-        if not cam.isOpened():
-           print("Error: Could not open webcam.")
-           return 
-    
-
-
+# WEB CAM
+cap = cv2.VideoCapture(0)
+with mp_hands.Hands(
+    model_complexity=0,
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5) as hands:
+    while cap.isOpened():
+        success, image = cap.read()
+        if not success:
+            print("Ignoring empty camera frame.")
+            continue
+        image.flags.writeable = False
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        results = hands.process(image)
+        image.flags.writeable = True
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                mp_drawing.draw_landmarks(
+                    image,
+                    hand_landmarks,
+                    mp_hands.HAND_CONNECTIONS,
+                    mp_drawing_styles.get_default_hand_landmarks_style(),
+                    mp_drawing_styles.get_default_hand_connections_style())
+        cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
+        if cv2.waitKey(5) & 0xFF == 27:
+            break
+cap.release()
